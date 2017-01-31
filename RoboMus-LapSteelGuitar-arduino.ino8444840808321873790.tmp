@@ -15,8 +15,8 @@ struct Pick pick[18];
 float fret[12];
 
 //engine ports
-int enginePin1 = 20; 
-int enginePin2 = 19; 
+int enginePin1 = 11; 
+int enginePin2 = 12; 
 
 
 //ultrassonic ports
@@ -67,7 +67,7 @@ void startPicks(int pin[]){
   for(int i=0; i < NUMBER_OF_PICKS; i++){
     pick[i].servo.attach(pin[i]);
     pick[i].servo.write(5);
-    pick[i].pos = 5;
+    pick[i].pos = 0;
   }
   
 }
@@ -143,25 +143,15 @@ void setup ()
   startFrets();
   startBar();
   delay(100);
-  Serial.print("apsas");
-  positionBar(4, 200);
- 
+  //positionBar(2, 200);
+ //Serial.print("apsas");
   
 }
 int cont = 0;
 void loop()
 {
    int firstByte;
-   if(Serial.available() > 0){
-    int x = Serial.read();
-    if(x == '+'){
-      cont++;
-    }else{
-      cont--;
-    }
-    Serial.println(cont);
-    moveBar(cont);
-  }
+  
    if(Serial.available() > 0){
     firstByte = Serial.read();    
     switch (firstByte){
@@ -219,17 +209,26 @@ void loop()
     }
 
    }
-   delay(400);
-  Serial.print("dist: ");
-  Serial.println(getSensorDistance());
-  /*
-  positionBar(4, 200);
+   //delay(400);
+   //Serial.print("dist: ");
+  //Serial.println(getSensorDistance());
+  /*positionBar(4, 200);
   delay(400);
-  positionBar(10, 200);
-  delay(400);
-  */
-
+  positionBar(10, 200);*/
+  delay(1000);
   
+  //moveBar(90);
+  delay(400);
+  if(Serial.available() > 0){
+    int x = Serial.read();
+    if(x == '+'){
+      cont++;
+    }else{
+      cont--;
+    }
+    Serial.println(cont);
+    moveBar(cont);
+  }
   
   
 }
