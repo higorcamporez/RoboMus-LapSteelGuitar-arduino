@@ -15,9 +15,8 @@ struct Pick{
 
 struct Pick pick[NUMBER_OF_PICKS]; //array que representa as palhetas
 
-//o indece é o numero da casa (traste)
+//o indece é o numero da casa
 // e o valor é a distancia do sensor
-// para teste a casa 13 tem o valor inicial da barra
 float fret[13];
 
 //engine ports
@@ -146,7 +145,6 @@ void positionBar(int numberFret, int engineSpeed){
      }
     
      distance = getSensorDistance();
-
    }
    engineStop();
 }
@@ -155,7 +153,6 @@ void moveBar(int pos){
   servoBar1.write(pos);
   servoBar2.write(180-pos);
 }
-
 /* ========================== funcoes para teste ============================== */
 
 /*  TESTE --- 07/04/2017
@@ -167,15 +164,14 @@ void moveBar(int pos){
  */
 void playNoteTest(int fretNumber, int stringNumber){
    
-   //positionBar(13, 255); //posicao inicial do teste
+   //positionBar(13); //posicao inicial do teste
    //delay(500);
    int initialTime = millis();
-   positionBar(fretNumber, 255);
-   //playString(stringNumber);
-   //delay(1000);
-   int timeSpent = millis() - initialTime;
-   char resultado[5];
-   //unsigned byte b[2] = {100,200}
+   //positionBar(numberFret, 255);
+   //playString(numberString);
+   delay(1000);
+   short timeSpent = initialTime - millis();
+   char resultado[4];
    itoa(timeSpent, resultado, 10);
    Serial.write(resultado);
    
@@ -190,16 +186,16 @@ void setup ()
   }
 
   int pin[NUMBER_OF_PICKS] = {2,3,4,5,6,7,8,9,10}; // valores das portas em que os servos da palhetas sao conectados
-  startPicks(pin); 
+  /*startPicks(pin); 
   startEngine();
   startFrets();
-  startBar();
+  startBar();*/
   
   //teste
-  //delay(100);
-  //positionBar(4, 150);
-  //positionBar(2, 150);
-
+  delay(100);
+  digitalWrite(13,LOW);
+  //positionBar(4, 200);
+  Serial.write("AS");
   
 }
 
@@ -271,13 +267,13 @@ void loop()
         break;
         
       case 100: //codigo para para teste de velocidade
-        delay(10);
+    
         if(Serial.available() > 0){
  
           int fret = Serial.read(); // casa para posicionamento
           int string = Serial.read();       //id da msg
           playNoteTest(fret, string); //posicionar a barra
-          
+          //Serial.write("AS"); //enviar id de confirmacao
           
         }
         break;
@@ -287,8 +283,8 @@ void loop()
    }
    //teste
    //delay(400);
-   //Serial.print("dist: ");
-   //Serial.println(getSensorDistance());
+  //Serial.print("dist: ");
+  //Serial.println(getSensorDistance());
   
 
   
