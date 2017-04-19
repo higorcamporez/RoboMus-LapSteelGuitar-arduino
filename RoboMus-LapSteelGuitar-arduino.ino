@@ -47,19 +47,19 @@ void startBar(){
 }
 /* inicia o vetor 'fret' com a distancia da respectiva do barra posicionada na casa até o sensor para cada casa. (fret[numero_da_casa] = distancia)*/
 void startFrets(){
-  fret[0] = 32.49; //fret one
-  fret[1] = 30.77; //fret two
-  fret[2] = 27.4; //fret three
-  fret[3] = 24.83; 
-  fret[4] = 22.77; 
-  fret[5] = 20.69; 
-  fret[6] = 19.60; 
-  fret[7] = 10.00;
-  fret[8] = 10.00; 
-  fret[9] = 10.00; 
-  fret[10] = 10.00; 
-  fret[11] = 10.00; 
-  fret[12] = 10.00; //value used only to inicial position to test
+  fret[0] = 28.50; //fret one
+  fret[1] = 26.3; //fret two
+  fret[2] = 23.15; //fret three
+  fret[3] = 21.10; //fret for
+  fret[4] = 18.70; //fret five
+  fret[5] = 17.25; //fret six
+  fret[6] = 14.30; //fret seven
+  fret[7] = 12.10; //fret eight
+  fret[8] = 9.70; //fret nine
+  fret[9] = 8.00; //fret ten
+  fret[10] = 6.10; //fret eleven
+  fret[11] = 4.55; //fret twelve
+  fret[12] = 3.55; //value used only to inicial position to test
   
 }
 /*Define as portas de controle dos motores que movimentam a barra no braco do instrumento como portas de saida*/
@@ -288,10 +288,21 @@ void loop()
    //teste
    //delay(400);
    //Serial.print("dist: ");
-   //Serial.println(getSensorDistance());
+   float distBuffer=0;
+   int countBuffer = 0;
+   while(countBuffer<10){
+     distBuffer = distBuffer + getSensorDistance();
+     countBuffer++;
+     Serial.println(distBuffer);
+   }
+   Serial.println("\n");
+   Serial.println("dist");
+   Serial.println(distBuffer/10);
+   delay(500);
   
 
   
   
   
 }
+
