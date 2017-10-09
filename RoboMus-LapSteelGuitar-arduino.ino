@@ -4,13 +4,31 @@
 #define NUMBER_OF_PICKS 9
 /*
   struct que representa uma palheta.
-  servo -> servo que contrala a palheta
+  servo -> servo que controla a palheta
   pos -> qual posicao o servo esta, ou seja, 0 acima da corda e 1 abaixo da corda
 */
 struct Pick{
   Servo servo;
   int pos;
 };
+/*
+  struct que representa uma mensagem recebida.
+  servo -> servo que contrala a palheta
+  pos -> qual posicao o servo esta, ou seja, 0 acima da corda e 1 abaixo da corda
+*/
+struct Message{
+  
+  byte idAction;
+  byte idMessage;
+  short relativeTime;
+  short duration;
+  byte data[20];
+  long initialTime;
+  long finalTime;
+  
+};
+
+struct Message currentMessage,nextMessage;
 
 
 struct Pick pick[NUMBER_OF_PICKS]; //array que representa as palhetas
@@ -24,6 +42,12 @@ float fret[13];
 int enginePin1 = 20; 
 int enginePin2 = 19; 
 
+//flag que de termina se é pra ler nova mensagem
+byte readNewMsg = 1;
+
+//variaveis auxiliares
+int hByte;
+int lByte;
 
 //ultrassonic ports
 #define TRIGGER_PIN  14
@@ -122,7 +146,12 @@ float getSensorDistance(){
   long microsec = ultrasonic.timing();
 
   cmMsec = ultrasonic.convert(microsec, Ultrasonic::CM);
-  
+  cmMsec += ultrasonic.convert(microsec, Ultrasonic::CM);
+  cmMsec += ultrasonic.convert(microsec, Ultrasonic::CM);
+  cmMsec += ultrasonic.convert(microsec, Ultrasonic::CM);
+  cmMsec += ultrasonic.convert(microsec, Ultrasonic::CM);
+
+  cmMsec = cmMsec/5;
   return cmMsec;
 }
 
@@ -137,8 +166,9 @@ void positionBar(int numberFret, int engineSpeed){
    
    float distance = getSensorDistance();
    
-   while(abs(distance  - fret[numberFret-1]) > 0.5){
-      delay(20);
+   
+   while(abs(distance  - fret[numberFret-1]) > 0.1){
+     //delay(5);
      if(distance < fret[numberFret-1]){
         moveEngineFoward(engineSpeed);
      }else{
@@ -185,6 +215,7 @@ void playNoteTest(int fretNumber, int stringNumber){
 void setup ()
 {
   Serial.begin(9600);
+  /*
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
   }
@@ -198,26 +229,19 @@ void setup ()
   //teste
   //delay(100);
   //positionBar(4, 150);
-  //positionBar(2, 150);
+  //positionBar(2, 150); */
+  currentMessage.initialTime = millis();
+  pinMode(13,OUTPUT);
+  digitalWrite(13,LOW);
+ 
 
   
 }
-
+/* void loop antiga
 void loop()
 {
    int firstByte;
-   /*apenas para teste
-   if(Serial.available() > 0){
-    int x = Serial.read();
-    if(x == '+'){
-      cont++;
-    }else{
-      cont--;
-    }
-    Serial.println(cont);
-    moveBar(cont);
-  }//fim teste */
-
+ 
    if(Serial.available() > 0){
   
     firstByte = Serial.read();    
@@ -270,6 +294,21 @@ void loop()
         }
         break;
         
+      case 60: //codigo para posicionar barra
+ 
+        if(Serial.available() >= 3 ){
+          
+          int fret = Serial.read(); // casa para posicionamento
+          int id = Serial.read();       //id da msg
+          
+          //positionBar(fret, 200); //posicionar a barra
+          delay(1000); //para teste, simula tempo da funcao
+          
+          Serial.write(id); //enviar id de confirmacao
+          
+        }
+        break;
+        
       case 100: //codigo para para teste de velocidade
         delay(10);
         if(Serial.available() > 0){
@@ -285,24 +324,113 @@ void loop()
     }
 
    }
-   //teste
-   //delay(400);
-   //Serial.print("dist: ");
-   float distBuffer=0;
-   int countBuffer = 0;
-   while(countBuffer<10){
-     distBuffer = distBuffer + getSensorDistance();
-     countBuffer++;
-     Serial.println(distBuffer);
-   }
-   Serial.println("\n");
-   Serial.println("dist");
-   Serial.println(distBuffer/10);
-   delay(500);
-  
 
   
   
+  
+} */
+
+void blinkLed(int t){
+  digitalWrite(13, HIGH);
+  delay(t);
+  digitalWrite(13, LOW);
+}
+/*
+  struct Message{
+    byte idAction;
+    byte idMessage;
+    byte relativeTime;
+    long duration;
+    byte data[20];
+    long initialTime;
+    long finalTime;
+  
+  };
+*/
+
+void readHeader(){
+  
+}
+void loop()
+{
+  if(readNewMsg){
+    if(Serial.available() > 0){
+      /*Read the header*/
+      nextMessage.idAction = firstByte;
+      nextMessage.idMessage = Serial.read();
+     
+      hByte = Serial.read();
+      lByte = Serial.read();
+    
+      nextMessage.relativeTime = hByte<<8 |  lByte;
+    
+      hByte = Serial.read();
+      lByte = Serial.read();
+      nextMessage.duration = hByte<<8 |  lByte;
+      /*end header*/
+      
+      switch (firstByte){
+        case 30://playString
+          nextMessage.data[1] = Serial.read(); // instrumentString
+          readNewMsg = 0;
+        break;
+        case 50://moveBar
+          nextMessage.data[1] = Serial.read(); // position - 0 -> down, 1-> up
+          readNewMsg = 0;
+        break;
+        case 60://positionBar
+          nextMessage.data[1] = Serial.read(); // fret
+          readNewMsg = 0;
+        break;
+        case 65: // playNote
+          
+          nextMessage.data[0] = Serial.read(); // instrument string
+          nextMessage.data[1] = Serial.read(); // fret
+          
+          readNewMsg = 0;
+          
+        break;
+        
+       }
+    }   
+  }else{
+    
+    if( millis() >= (currentMessage.initialTime + nextMessage.relativeTime) 
+       ){ //execucao
+      currentMessage = nextMessage;
+      readNewMsg = 1;
+      switch (currentMessage.idAction){
+        case 30://playString
+          //funcao pra isso
+        break;
+        case 50://moveBar
+          //funcao pra isso
+        break;
+        case 60://positionBar
+          //funcao pra isso
+        break;
+        case 65: // playNote
+          currentMessage.initialTime = millis();
+          blinkLed(currentMessage.duration);
+          
+          Serial.write(currentMessage.idMessage);
+
+        break;
+       }  
+    }else{ //preparacao
+      
+      switch (currentMessage.idAction){
+        case 60://positionBar
+          //funcao pra isso
+        break;
+        case 65: // playNote
+          //blinkLed(100);
+        break;
+        
+       }  
+    }
+    
+  }
   
 }
 
