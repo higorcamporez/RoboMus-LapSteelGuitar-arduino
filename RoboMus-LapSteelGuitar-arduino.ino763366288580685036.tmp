@@ -44,10 +44,10 @@ int enginePin2 = 19;
 
 //flag que de termina se é pra ler nova mensagem
 byte readNewMsg = 1;
-byte firstByte;
+
 //variaveis auxiliares
-byte hByte;
-byte lByte;
+int hByte;
+int lByte;
 
 //ultrassonic ports
 #define TRIGGER_PIN  14
@@ -215,10 +215,10 @@ void playNoteTest(int fretNumber, int stringNumber){
 void setup ()
 {
   Serial.begin(9600);
-  
+  /*
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
-  }/*
+  }
 
   int pin[NUMBER_OF_PICKS] = {2,3,4,5,6,7,8,9,10}; // valores das portas em que os servos da palhetas sao conectados
   startPicks(pin); 
@@ -231,7 +231,6 @@ void setup ()
   //positionBar(4, 150);
   //positionBar(2, 150); */
   currentMessage.initialTime = millis();
-  nextMessage.relativeTime = 0x7FFF;
   pinMode(13,OUTPUT);
   digitalWrite(13,LOW);
  
@@ -359,29 +358,25 @@ void blinkLed2(int t){
 void loop()
 {
   if(readNewMsg){
-    if(Serial.available() > 5){
-      //Read the header
-      firstByte = Serial.read();
+    if(Serial.available() > 0){
+      /*Read the header*/
       nextMessage.idAction = firstByte;
-      delay(5);
       nextMessage.idMessage = Serial.read();
      
       hByte = Serial.read();
       lByte = Serial.read();
-      nextMessage.relativeTime = hByte<<8 | lByte;
-      
+    
+      nextMessage.relativeTime = hByte<<8 |  lByte;
+    
       hByte = Serial.read();
       lByte = Serial.read();
-      nextMessage.duration = hByte<<8 |  (lByte);
-      //Serial.write(hByte);
-      //Serial.write(lByte);
-      //end header
+      nextMessage.duration = hByte<<8 |  lByte;
+      /*end header*/
       
       switch (firstByte){
         case 30://playString
           nextMessage.data[1] = Serial.read(); // instrumentString
           readNewMsg = 0;
-          
         break;
         case 40: //playStringTogether
           //corda 9 na posicao 1
@@ -411,14 +406,13 @@ void loop()
           nextMessage.data[1] = Serial.read(); // fret
           
           readNewMsg = 0;
-          blinkLed2(40);
+          
         break;
         
        }
     }   
   }else{
-    nextMessage.relativeTime = 3000;
-    //nextMessage.duration = 5000;
+    
     if( millis() >= (currentMessage.initialTime + nextMessage.relativeTime) 
        ){ //execucao
       currentMessage = nextMessage;
@@ -426,31 +420,15 @@ void loop()
       switch (currentMessage.idAction){
         case 30://playString
           //funcao pra isso
-          currentMessage.initialTime = millis();
-          blinkLed(currentMessage.duration);
-          
-          Serial.write(currentMessage.idMessage);
         break;
         case 50://moveBar
           //funcao pra isso
-          currentMessage.initialTime = millis();
-          blinkLed(currentMessage.duration);
-          
-          Serial.write(currentMessage.idMessage);
         break;
         case 55://slide
           //funcao pra isso
-          currentMessage.initialTime = millis();
-          blinkLed(currentMessage.duration);
-          
-          Serial.write(currentMessage.idMessage);
         break;
         case 60://positionBar
           //funcao pra isso
-          currentMessage.initialTime = millis();
-          blinkLed(currentMessage.duration);
-          
-          Serial.write(currentMessage.idMessage);
         break;
         case 65: // playNote
           currentMessage.initialTime = millis();
@@ -463,16 +441,11 @@ void loop()
     }else{ //preparacao
       
       switch (currentMessage.idAction){
-        case 55:
-        //funcao pra isso
-          blinkLed2(40);
-        break;
         case 60://positionBar
           //funcao pra isso
-          blinkLed2(40);
         break;
         case 65: // playNote
-          blinkLed2(40);
+          //blinkLed(100);
         break;
         
        }  
